@@ -1,2 +1,664 @@
+[index (2).html](https://github.com/user-attachments/files/28911321/index.2.html)
 # hc.medicaltraining
 medical training de harmonie canine 2026
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="Med Training"/>
+<meta name="theme-color" content="#5C7A5A"/>
+<title>Medical Training 🐾</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#F8F5F0;font-family:'Segoe UI',system-ui,sans-serif;color:#2C3E2D;}
+#root{max-width:480px;margin:0 auto;min-height:100vh;}
+input,select,textarea,button{font-family:inherit;}
+</style>
+</head>
+<body>
+<div id="root"><div style="display:flex;align-items:center;justify-content:center;height:100vh;font-size:16px;color:#7A8B7B;">Chargement...</div></div>
+<script type="text/babel">
+const {useState,useEffect,useRef} = React;
+
+// Couleurs
+const C = {
+  green:"#5C7A5A",greenL:"#7A9E78",cream:"#F8F5F0",sand:"#E8E0D5",
+  terra:"#C4724A",text:"#2C3E2D",muted:"#7A8B7B",white:"#FFFFFF",
+  yellow:"#F5C842",red:"#E05252",blue:"#4A7AC4",
+};
+
+const uid = () => Math.random().toString(36).slice(2,9);
+
+// Semaine ISO
+function getWeekKey(date=new Date()){
+  const d=new Date(date); d.setHours(0,0,0,0);
+  d.setDate(d.getDate()+3-((d.getDay()+6)%7));
+  const w1=new Date(d.getFullYear(),0,4);
+  const wn=1+Math.round(((d-w1)/86400000-3+((w1.getDay()+6)%7))/7);
+  return `${d.getFullYear()}-W${String(wn).padStart(2,"0")}`;
+}
+function getWeekLabel(key){
+  const [y,w]=key.split("-W");
+  const jan4=new Date(Number(y),0,4);
+  const mon=new Date(jan4); mon.setDate(jan4.getDate()-((jan4.getDay()+6)%7)+(Number(w)-1)*7);
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  const f=d=>d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"});
+  return `Du ${f(mon)} au ${f(sun)}`;
+}
+
+// Données initiales
+const INIT = {"chiots":[{"nom":"Aito","race":"Shiba inu","age":"4 mois","proprietaire":"Mme Barbin","tel":"","notes":"Calme, a l aise","pack":"facile","id":"hjhbmja","seancesCheck":[{"seanceNum":1,"exercices":[{"id":"s1_bal","fait":true},{"id":"s1_tab","fait":true},{"id":"s1_gueule","fait":true},{"id":"s1_oreille","fait":true},{"id":"s1_patte","fait":true},{"id":"s1_arriere","fait":true},{"id":"s1_regard","fait":true},{"id":"s1_touch","fait":true}]}],"seances":[{"id":"vud21em","date":"2026-04-03","note":"Vet23 S1"}],"rdvs":[{"id":"qspctf5","date":"2026-05-13","motif":"S2 arcadia"}],"extraExos":[]},{"nom":"Artic","race":"Malinois","age":"4 mois","proprietaire":"Passelande Marie-Christine","tel":"0615794495","notes":"Calme","pack":"facile","id":"oewp1vs","seancesCheck":[{"seanceNum":1,"exercices":[{"id":"s1_bal","fait":true},{"id":"s1_tab","fait":true},{"id":"s1_gueule","fait":true},{"id":"s1_oreille","fait":true},{"id":"s1_patte","fait":true},{"id":"s1_arriere","fait":true},{"id":"s1_regard","fait":true},{"id":"s1_touch","fait":true}]},{"seanceNum":99,"exercices":[{"id":"x1h6v7r","fait":true},{"id":"vmuko1s","fait":true},{"id":"f1ufjoy","fait":true}]}],"seances":[{"id":"8gxe0ew","date":"2026-04-22","note":"Active"}],"rdvs":[{"id":"jmrxsaj","date":"2026-04-22","motif":"S1 vet23"},{"id":"hwfd4yj","date":"2026-05-15","motif":"S2 vet23"},{"id":"xtiwu3p","date":"2026-05-22","motif":"S2"}],"extraExos":[{"id":"x1h6v7r","label":"Apprendre le coucher"},{"id":"vmuko1s","label":"Eviter de sauter"},{"id":"f1ufjoy","label":"Canaliser energie"}]},{"nom":"Amaya","race":"Shiba x Aussie","age":"5 mois et demi","proprietaire":"Mme Wojciechowski","tel":"","notes":"Stress +","pack":"complexe","id":"dp6dpfb","seancesCheck":[{"seanceNum":1,"exercices":[{"id":"c1_bal","fait":true},{"id":"c1_tab","fait":true},{"id":"c1_gueule","fait":true},{"id":"c1_oreille","fait":true},{"id":"c1_patte","fait":true},{"id":"c1_arriere","fait":true},{"id":"c1_regard","fait":true}]},{"seanceNum":99,"exercices":[{"id":"98dbgch","fait":true}]}],"seances":[{"id":"p74as8l","date":"2026-04-22","note":"Table tres compliquee"}],"rdvs":[{"id":"zd735ze","date":"2026-05-20","motif":"Seance 2 arcadia"}],"extraExos":[{"id":"98dbgch","label":"Jeu avec aloha"}]},{"nom":"Atom","race":"Jack russe","age":"11 mois","proprietaire":"Oger","tel":"","notes":"","pack":"complexe","id":"xgu7y0r","seancesCheck":[{"seanceNum":1,"exercices":[{"id":"c1_bal","fait":true},{"id":"c1_tab","fait":true},{"id":"c1_gueule","fait":true},{"id":"c1_oreille","fait":true},{"id":"c1_patte","fait":true},{"id":"c1_arriere","fait":true},{"id":"c1_regard","fait":true}]},{"seanceNum":2,"exercices":[{"id":"c2_bal","fait":true},{"id":"c2_tab","fait":true},{"id":"c2_gueule","fait":true},{"id":"c2_oreille","fait":true},{"id":"c2_patte","fait":true},{"id":"c2_arriere","fait":true},{"id":"c2_sons","fait":true}]},{"seanceNum":3,"exercices":[{"id":"c3_bal","fait":true},{"id":"c3_tab","fait":true},{"id":"c3_gueule","fait":true},{"id":"c3_oreille","fait":true},{"id":"c3_stetho","fait":true},{"id":"c3_seringue","fait":true},{"id":"c3_musel","fait":true}]},{"seanceNum":4,"exercices":[{"id":"c4_bal","fait":true},{"id":"c4_tab","fait":true},{"id":"c4_gueule","fait":true},{"id":"c4_oreille","fait":true},{"id":"c4_patte","fait":true},{"id":"c4_arriere","fait":true},{"id":"c4_musel","fait":true}]}],"seances":[],"rdvs":[{"id":"hjghpnf","date":"2026-06-17","motif":"bilan"}],"extraExos":[]},{"nom":"Blue","race":"Spitz Japonais x pomsky","age":"3 mois 1/2","proprietaire":"Bryand","tel":"0636552531","notes":"A l aise","pack":"facile","id":"olziaa6","seancesCheck":[{"seanceNum":1,"exercices":[{"id":"s1_bal","fait":true},{"id":"s1_tab","fait":true},{"id":"s1_gueule","fait":true},{"id":"s1_oreille","fait":true},{"id":"s1_patte","fait":true},{"id":"s1_arriere","fait":true},{"id":"s1_regard","fait":true},{"id":"s1_touch","fait":true}]}],"seances":[{"id":"x6g50we","date":"2026-05-19","note":"Apprend vite"}],"rdvs":[{"id":"xjuifsq","date":"2026-06-12","motif":"Mt2 carcan"}],"extraExos":[]},{"nom":"Birdy","race":"Labrador","age":"2 mois et demi","proprietaire":"Lerendu","tel":"","notes":"","pack":"facile","id":"3zm044h","seancesCheck":[],"seances":[],"rdvs":[{"id":"t04q96r","date":"2026-06-12","motif":"Seance 1"}],"extraExos":[]}],"adultes":[{"nom":"Olympe","race":"Berger allemand","age":"9 ans","proprietaire":"Mme Eline","tel":"","motif":"Hypervigilence +","notes":"Anxiete +","id":"ruslwge","seancesCheck":[{"seanceNum":1,"etapes":[{"id":"a1_parking","fait":true},{"id":"a1_entree","fait":true},{"id":"a1_hall","fait":true},{"id":"a1_odeurs","fait":true},{"id":"a1_calme","fait":true},{"id":"a1_regard","fait":true}]}],"seances":[{"id":"vp4owfe","date":"2026-06-12","note":"Sous Selgian depuis 1 mois"}],"rdvs":[]},{"nom":"Tahlia","race":"Teckel","age":"4 ans","proprietaire":"Bertolini","tel":"","motif":"Tres stresse","notes":"Animal stresse/anxieux","id":"ihwjtmk","seancesCheck":[],"seances":[{"id":"0z545vo","date":"2026-06-10","note":"Stress + au comptoir"}],"rdvs":[{"id":"zp21toy","date":"2026-06-30","motif":"Seance 1"}]}]};
+
+// Referentiels exercices
+const REF = {
+  facile:[
+    {num:1,label:"Seance 1",exos:[{id:"s1_bal",label:"Balance board"},{id:"s1_tab",label:"Table examen"},{id:"s1_gueule",label:"Manipulation gueule"},{id:"s1_oreille",label:"Manipulation oreilles"},{id:"s1_patte",label:"Manipulation pattes"},{id:"s1_arriere",label:"Train arriere"},{id:"s1_regard",label:"Contact regard"},{id:"s1_touch",label:"Toucher global"}]},
+    {num:2,label:"Seance 2",exos:[{id:"s2_bal",label:"Balance board"},{id:"s2_tab",label:"Table examen"},{id:"s2_gueule",label:"Manipulation gueule"},{id:"s2_oreille",label:"Manipulation oreilles"},{id:"s2_patte",label:"Manipulation pattes"},{id:"s2_arriere",label:"Train arriere"},{id:"s2_stetho",label:"Stethoscope"},{id:"s2_seringue",label:"Seringue"}]},
+    {num:3,label:"Seance 3",exos:[{id:"s3_bal",label:"Balance board"},{id:"s3_tab",label:"Table examen"},{id:"s3_gueule",label:"Manipulation gueule"},{id:"s3_oreille",label:"Manipulation oreilles"},{id:"s3_patte",label:"Manipulation pattes"},{id:"s3_arriere",label:"Train arriere"},{id:"s3_musel",label:"Museliere"},{id:"s3_bilan",label:"Bilan complet"}]},
+  ],
+  complexe:[
+    {num:1,label:"Seance 1",exos:[{id:"c1_bal",label:"Balance board"},{id:"c1_tab",label:"Table examen"},{id:"c1_gueule",label:"Manipulation gueule"},{id:"c1_oreille",label:"Manipulation oreilles"},{id:"c1_patte",label:"Manipulation pattes"},{id:"c1_arriere",label:"Train arriere"},{id:"c1_regard",label:"Contact regard"}]},
+    {num:2,label:"Seance 2",exos:[{id:"c2_bal",label:"Balance board"},{id:"c2_tab",label:"Table examen"},{id:"c2_gueule",label:"Manipulation gueule"},{id:"c2_oreille",label:"Manipulation oreilles"},{id:"c2_patte",label:"Manipulation pattes"},{id:"c2_arriere",label:"Train arriere"},{id:"c2_sons",label:"Sons / bruits"}]},
+    {num:3,label:"Seance 3",exos:[{id:"c3_bal",label:"Balance board"},{id:"c3_tab",label:"Table examen"},{id:"c3_gueule",label:"Manipulation gueule"},{id:"c3_oreille",label:"Manipulation oreilles"},{id:"c3_stetho",label:"Stethoscope"},{id:"c3_seringue",label:"Seringue"},{id:"c3_musel",label:"Museliere"}]},
+    {num:4,label:"Seance 4",exos:[{id:"c4_bal",label:"Balance board"},{id:"c4_tab",label:"Table examen"},{id:"c4_gueule",label:"Manipulation gueule"},{id:"c4_oreille",label:"Manipulation oreilles"},{id:"c4_patte",label:"Manipulation pattes"},{id:"c4_arriere",label:"Train arriere"},{id:"c4_musel",label:"Museliere"}]},
+    {num:5,label:"Seance 5",exos:[{id:"c5_bal",label:"Balance board"},{id:"c5_tab",label:"Table examen"},{id:"c5_gueule",label:"Manipulation gueule"},{id:"c5_oreille",label:"Manipulation oreilles"},{id:"c5_patte",label:"Manipulation pattes"},{id:"c5_arriere",label:"Train arriere"},{id:"c5_bilan",label:"Bilan complet"}]},
+  ],
+  adulte:[
+    {num:1,label:"Seance 1",exos:[{id:"a1_parking",label:"Parking / approche"},{id:"a1_entree",label:"Entree clinique"},{id:"a1_hall",label:"Hall attente"},{id:"a1_odeurs",label:"Desensibilisation odeurs"},{id:"a1_calme",label:"Posture calme"},{id:"a1_regard",label:"Contact regard"}]},
+    {num:2,label:"Seance 2",exos:[{id:"a2_salle",label:"Salle examen"},{id:"a2_tab",label:"Table examen"},{id:"a2_touch",label:"Toucher general"},{id:"a2_gueule",label:"Manipulation gueule"},{id:"a2_oreille",label:"Manipulation oreilles"},{id:"a2_patte",label:"Manipulation pattes"}]},
+    {num:3,label:"Seance 3",exos:[{id:"a3_stetho",label:"Stethoscope"},{id:"a3_seringue",label:"Seringue simulee"},{id:"a3_musel",label:"Museliere"},{id:"a3_bilan",label:"Bilan complet"},{id:"a3_stress",label:"Gestion stress aigu"}]},
+  ],
+};
+
+// Helpers exercices
+function isChecked(animal, exoId){
+  return (animal.seancesCheck||[]).some(sc=>(sc.exercices||sc.etapes||[]).some(e=>e.id===exoId&&e.fait));
+}
+function toggleExo(animal, exoId){
+  const checks = JSON.parse(JSON.stringify(animal.seancesCheck||[]));
+  let found=false;
+  for(const sc of checks){
+    const key=sc.exercices?"exercices":"etapes";
+    const idx=sc[key].findIndex(e=>e.id===exoId);
+    if(idx>=0){sc[key][idx].fait=!sc[key][idx].fait;found=true;break;}
+  }
+  if(!found){
+    const isA=animal.pack===undefined;
+    const k=isA?"etapes":"exercices";
+    checks.push({seanceNum:99,[k]:[{id:exoId,fait:true}]});
+  }
+  return {...animal,seancesCheck:checks};
+}
+
+// Styles
+const card = {background:C.white,borderRadius:12,padding:14,marginBottom:12,boxShadow:"0 1px 4px rgba(0,0,0,0.06)",border:"1px solid "+C.sand};
+const secTitle = {fontSize:11,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:1,marginBottom:8,display:"flex",alignItems:"center",gap:6};
+const inputSt = {width:"100%",border:"1px solid "+C.sand,borderRadius:8,padding:"9px 12px",fontSize:14,boxSizing:"border-box",background:C.white,color:C.text,outline:"none"};
+const btn = (v="primary")=>({border:"none",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13,padding:"8px 14px",background:v==="danger"?C.red:v==="sec"?C.sand:C.green,color:v==="sec"?C.text:C.white});
+const badge = (col=C.greenL)=>({background:col,color:C.white,borderRadius:20,padding:"2px 8px",fontSize:10,fontWeight:700});
+const tabBtn = (a)=>({flex:1,padding:"10px 4px",border:"none",background:"none",cursor:"pointer",fontSize:11,fontWeight:a?700:400,color:a?C.green:C.muted,borderBottom:a?"2px solid "+C.green:"2px solid transparent",marginBottom:-2});
+
+// Checkbox
+function CB({checked,onToggle}){
+  return <div onClick={onToggle} style={{width:22,height:22,minWidth:22,borderRadius:6,border:"2px solid "+(checked?C.green:C.sand),background:checked?C.green:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+    {checked&&<svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+  </div>;
+}
+
+// Génération PDF
+function generatePDF(animal){
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({unit:"mm",format:"a4"});
+  const isA = animal.pack===undefined;
+  const ref = isA ? REF.adulte : animal.pack==="complexe" ? REF.complexe : REF.facile;
+  let y=20;
+  const lm=15; const pw=180;
+
+  // Entete
+  doc.setFillColor(92,122,90);
+  doc.rect(0,0,210,35,"F");
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(20); doc.setFont("helvetica","bold");
+  doc.text("Medical Training - Clinique Arcadia",lm,14);
+  doc.setFontSize(13); doc.setFont("helvetica","normal");
+  doc.text("Compte rendu - "+animal.nom+" ("+animal.race+", "+animal.age+")",lm,22);
+  doc.setFontSize(10);
+  doc.text("Proprietaire : "+animal.proprietaire+(animal.tel?" | Tel : "+animal.tel:""),lm,29);
+  doc.setTextColor(44,62,45);
+  y=45;
+
+  // Infos
+  if(animal.pack){
+    doc.setFillColor(234,242,234);
+    doc.rect(lm,y-4,pw,10,"F");
+    doc.setFontSize(11); doc.setFont("helvetica","bold");
+    doc.text("Pack : "+animal.pack.toUpperCase(),lm+3,y+2);
+    y+=14;
+  }
+  if(animal.notes){
+    doc.setFontSize(10); doc.setFont("helvetica","italic");
+    doc.text("Notes generales : "+animal.notes,lm,y);
+    y+=8;
+  }
+
+  // Exercices par seance
+  doc.setFontSize(13); doc.setFont("helvetica","bold");
+  doc.setTextColor(92,122,90);
+  doc.text("Progression des exercices",lm,y); y+=8;
+  doc.setDrawColor(92,122,90); doc.setLineWidth(0.5);
+  doc.line(lm,y,lm+pw,y); y+=5;
+
+  for(const seance of ref){
+    if(y>260){doc.addPage();y=20;}
+    doc.setFontSize(11); doc.setFont("helvetica","bold"); doc.setTextColor(44,62,45);
+    const done=seance.exos.filter(e=>isChecked(animal,e.id)).length;
+    doc.text(seance.label+" ("+done+"/"+seance.exos.length+")",lm,y); y+=6;
+    for(const exo of seance.exos){
+      if(y>270){doc.addPage();y=20;}
+      const ok=isChecked(animal,exo.id);
+      doc.setFontSize(10); doc.setFont("helvetica","normal");
+      doc.setTextColor(ok?92:180,ok?122:180,ok?90:180);
+      doc.text((ok?"[OK] ":"[ ] ")+exo.label,lm+5,y); y+=5;
+    }
+    y+=3;
+  }
+
+  // Exercices perso
+  if((animal.extraExos||[]).length>0){
+    if(y>250){doc.addPage();y=20;}
+    doc.setFontSize(11); doc.setFont("helvetica","bold"); doc.setTextColor(44,62,45);
+    doc.text("Exercices personnalises",lm,y); y+=6;
+    for(const exo of animal.extraExos){
+      const ok=isChecked(animal,exo.id);
+      doc.setFontSize(10); doc.setFont("helvetica","normal");
+      doc.setTextColor(ok?92:180,ok?122:180,ok?90:180);
+      doc.text((ok?"[OK] ":"[ ] ")+exo.label,lm+5,y); y+=5;
+    }
+    y+=3;
+  }
+
+  // Notes de seances
+  if((animal.seances||[]).length>0){
+    if(y>240){doc.addPage();y=20;}
+    doc.setFontSize(13); doc.setFont("helvetica","bold"); doc.setTextColor(92,122,90);
+    doc.text("Notes de seances",lm,y); y+=6;
+    doc.setDrawColor(92,122,90); doc.setLineWidth(0.5);
+    doc.line(lm,y,lm+pw,y); y+=6;
+    const sorted=[...(animal.seances||[])].sort((a,b)=>a.date.localeCompare(b.date));
+    for(const s of sorted){
+      if(y>260){doc.addPage();y=20;}
+      doc.setFontSize(10); doc.setFont("helvetica","bold"); doc.setTextColor(196,114,74);
+      doc.text(new Date(s.date).toLocaleDateString("fr-FR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"}),lm,y); y+=5;
+      doc.setFont("helvetica","normal"); doc.setTextColor(44,62,45);
+      const lines=doc.splitTextToSize(s.note||"",pw-5);
+      for(const line of lines){
+        if(y>270){doc.addPage();y=20;}
+        doc.text(line,lm+3,y); y+=5;
+      }
+      y+=4;
+    }
+  }
+
+  // Pied de page
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i);
+    doc.setFontSize(8); doc.setTextColor(150,150,150);
+    doc.text("Clinique Arcadia - Medical Training | "+new Date().toLocaleDateString("fr-FR")+" | Page "+i+"/"+pages,lm,290);
+  }
+
+  doc.save("CR_"+animal.nom+"_"+new Date().toISOString().slice(0,10)+".pdf");
+}
+
+// Notes hebdo
+function NotesHebdo({weekNotes,setWeekNotes}){
+  const todayKey=getWeekKey();
+  const [sel,setSel]=useState(todayKey);
+  const [newTask,setNewTask]=useState("");
+  const current=weekNotes[sel]||{tasks:[]};
+  const save=u=>setWeekNotes({...weekNotes,[sel]:u});
+  const addTask=()=>{if(!newTask.trim())return;save({tasks:[...current.tasks,{id:uid(),label:newTask.trim(),done:false}]});setNewTask("");};
+  const toggle=id=>save({tasks:current.tasks.map(t=>t.id===id?{...t,done:!t.done}:t)});
+  const del=id=>save({tasks:current.tasks.filter(t=>t.id!==id)});
+  const weeks=[];
+  for(let i=4;i>=1;i--){const d=new Date();d.setDate(d.getDate()+i*7);const k=getWeekKey(d);if(!weeks.includes(k))weeks.push(k);}
+  for(let i=0;i<=4;i++){const d=new Date();d.setDate(d.getDate()-i*7);const k=getWeekKey(d);if(!weeks.includes(k))weeks.push(k);}
+  const done=current.tasks.filter(t=>t.done).length;
+  const total=current.tasks.length;
+  return (
+    <div style={{marginBottom:20}}>
+      <div style={secTitle}>
+        <span>📋</span> Notes de la semaine
+        <div style={{marginLeft:"auto",display:"flex",gap:6,alignItems:"center"}}>
+          {total>0&&<span style={badge(done===total?C.green:C.terra)}>{done}/{total}</span>}
+          {sel===todayKey&&<span style={{background:C.yellow,color:C.text,borderRadius:20,padding:"2px 8px",fontSize:10,fontWeight:700}}>Cette semaine</span>}
+          {sel>todayKey&&<span style={{background:C.blue,color:C.white,borderRadius:20,padding:"2px 8px",fontSize:10,fontWeight:700}}>A venir</span>}
+        </div>
+      </div>
+      <div style={card}>
+        <select value={sel} onChange={e=>setSel(e.target.value)} style={{...inputSt,marginBottom:12,cursor:"pointer"}}>
+          {weeks.map(k=><option key={k} value={k}>{k>todayKey?"→ ":k===todayKey?"✦ ":"← "}{getWeekLabel(k)}</option>)}
+        </select>
+        {total>0&&<div style={{background:C.sand,borderRadius:4,height:6,overflow:"hidden",marginBottom:12}}><div style={{width:(done/total*100)+"%",background:done===total?C.green:C.terra,height:"100%",borderRadius:4,transition:"width 0.3s"}}/></div>}
+        {current.tasks.length===0
+          ?<p style={{color:C.muted,fontSize:13,textAlign:"center",padding:"10px 0"}}>Aucune note pour cette semaine</p>
+          :current.tasks.map((t,i)=>(
+            <div key={t.id} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"8px 0",borderBottom:i<current.tasks.length-1?"1px solid "+C.sand:"none"}}>
+              <CB checked={t.done} onToggle={()=>toggle(t.id)}/>
+              <span onClick={()=>toggle(t.id)} style={{flex:1,fontSize:14,lineHeight:1.4,cursor:"pointer",textDecoration:t.done?"line-through":"none",color:t.done?C.muted:C.text}}>{t.label}</span>
+              <button onClick={()=>del(t.id)} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:18,padding:"0 4px"}}>×</button>
+            </div>
+          ))
+        }
+        <div style={{display:"flex",gap:8,marginTop:12}}>
+          <input style={{...inputSt,flex:1}} placeholder="Ajouter une tache..." value={newTask} onChange={e=>setNewTask(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addTask()}/>
+          <button style={{...btn(),padding:"9px 16px",flexShrink:0}} onClick={addTask}>+</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Export/Import
+function ExportImport({data,weekNotes,onImport}){
+  const fileRef=useRef();
+  const [msg,setMsg]=useState(null);
+  const doExport=()=>{
+    const blob=new Blob([JSON.stringify({data,weekNotes,exportedAt:new Date().toISOString()},null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a"); a.href=url; a.download="majmedical-training-"+new Date().toISOString().slice(0,10)+".json";
+    a.click(); URL.revokeObjectURL(url);
+  };
+  const doImport=e=>{
+    const file=e.target.files[0]; if(!file)return;
+    const r=new FileReader();
+    r.onload=ev=>{try{const p=JSON.parse(ev.target.result);if(!p.data)throw 0;onImport(p.data,p.weekNotes||{});setMsg("ok");}catch{setMsg("err");}setTimeout(()=>setMsg(null),3000);};
+    r.readAsText(file); e.target.value="";
+  };
+  return (
+    <div style={{marginBottom:20}}>
+      <div style={secTitle}><span>💾</span> Sauvegarde</div>
+      <div style={{...card,display:"flex",gap:10,flexWrap:"wrap"}}>
+        <button style={{...btn(),flex:1,minWidth:120}} onClick={doExport}>⬇️ Exporter</button>
+        <button style={{...btn("sec"),flex:1,minWidth:120}} onClick={()=>fileRef.current.click()}>⬆️ Importer</button>
+        <input ref={fileRef} type="file" accept=".json" style={{display:"none"}} onChange={doImport}/>
+        {msg==="ok"&&<div style={{width:"100%",fontSize:13,textAlign:"center",color:C.green,fontWeight:600}}>✅ Import reussi !</div>}
+        {msg==="err"&&<div style={{width:"100%",fontSize:13,textAlign:"center",color:C.red,fontWeight:600}}>❌ Fichier invalide</div>}
+      </div>
+    </div>
+  );
+}
+
+// Carte animal (liste)
+function AnimalCard({animal,onClick}){
+  const today=new Date().toISOString().slice(0,10);
+  const next=(animal.rdvs||[]).filter(r=>r.date>=today).sort((a,b)=>a.date.localeCompare(b.date))[0];
+  const pc=animal.pack==="complexe"?C.terra:C.greenL;
+  return (
+    <div style={{...card,cursor:"pointer",display:"flex",alignItems:"center",gap:12}} onClick={onClick}>
+      <div style={{width:40,height:40,borderRadius:10,background:pc+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{animal.pack!==undefined?"🐾":"🐕"}</div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontWeight:700,fontSize:15}}>{animal.nom}</div>
+        <div style={{fontSize:12,color:C.muted}}>{animal.race} · {animal.age}</div>
+        {next&&<div style={{fontSize:11,color:C.terra,marginTop:2}}>📅 {new Date(next.date).toLocaleDateString("fr-FR")} — {next.motif}</div>}
+      </div>
+      {animal.pack&&<span style={badge(pc)}>{animal.pack}</span>}
+    </div>
+  );
+}
+
+// Detail animal
+function AnimalDetail({animal,onBack,onUpdate,onDelete}){
+  const [tab,setTab]=useState("exercices");
+  const [newRdv,setNewRdv]=useState({date:"",motif:""});
+  const [newNote,setNewNote]=useState({date:new Date().toISOString().slice(0,10),note:""});
+  const [editNotes,setEditNotes]=useState(animal.notes||"");
+  const [newExo,setNewExo]=useState("");
+  const today=new Date().toISOString().slice(0,10);
+  const isA=animal.pack===undefined;
+  const ref=isA?REF.adulte:animal.pack==="complexe"?REF.complexe:REF.facile;
+  const pc=animal.pack==="complexe"?C.terra:animal.pack==="facile"?C.greenL:C.blue;
+  const upRdvs=(animal.rdvs||[]).filter(r=>r.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
+  const pastRdvs=(animal.rdvs||[]).filter(r=>r.date<today).sort((a,b)=>b.date.localeCompare(a.date));
+  const addRdv=()=>{if(!newRdv.date)return;onUpdate({...animal,rdvs:[...(animal.rdvs||[]),{id:uid(),...newRdv}]});setNewRdv({date:"",motif:""});};
+  const delRdv=id=>onUpdate({...animal,rdvs:(animal.rdvs||[]).filter(r=>r.id!==id)});
+  const addNote=()=>{if(!newNote.note.trim())return;onUpdate({...animal,seances:[...(animal.seances||[]),{id:uid(),...newNote}]});setNewNote({date:today,note:""});};
+  const addExo=()=>{
+    if(!newExo.trim())return;
+    const id=uid();
+    const extra=[...(animal.extraExos||[]),{id,label:newExo.trim()}];
+    const checks=JSON.parse(JSON.stringify(animal.seancesCheck||[]));
+    let sc99=checks.find(s=>s.seanceNum===99);
+    if(!sc99){sc99={seanceNum:99,exercices:[]};checks.push(sc99);}
+    sc99.exercices.push({id,fait:false});
+    onUpdate({...animal,extraExos:extra,seancesCheck:checks});
+    setNewExo("");
+  };
+  const allIds=ref.flatMap(s=>s.exos.map(e=>e.id)).concat((animal.extraExos||[]).map(e=>e.id));
+  const totalExos=allIds.length;
+  const doneExos=allIds.filter(id=>isChecked(animal,id)).length;
+
+  return (
+    <div>
+      <div style={{background:C.green,color:C.white,padding:"14px 16px",display:"flex",alignItems:"center",gap:12}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:C.white,fontSize:22,cursor:"pointer",padding:0}}>←</button>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:700,fontSize:17}}>{animal.nom}</div>
+          <div style={{fontSize:12,opacity:.8}}>{animal.race} · {animal.age} · {animal.proprietaire}</div>
+        </div>
+        {animal.pack&&<span style={badge(pc)}>{animal.pack}</span>}
+      </div>
+      <div style={{display:"flex",background:C.white,borderBottom:"2px solid "+C.sand,position:"sticky",top:64,zIndex:99}}>
+        {[["exercices","✅ Exercices"],["rdv","📅 RDV"],["notes","📝 Notes"],["infos","ℹ️ Infos"]].map(([k,l])=>(
+          <button key={k} style={tabBtn(tab===k)} onClick={()=>setTab(k)}>{l}</button>
+        ))}
+      </div>
+      <div style={{padding:"14px 16px 80px"}}>
+
+        {tab==="exercices"&&(
+          <div>
+            {/* Bouton PDF */}
+            <button onClick={()=>generatePDF(animal)} style={{...btn(),width:"100%",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"11px"}}>
+              📄 Télécharger le compte rendu PDF
+            </button>
+            {/* Progression */}
+            {totalExos>0&&(
+              <div style={{...card,marginBottom:16}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                  <span style={{fontSize:13,fontWeight:600}}>Progression globale</span>
+                  <span style={{fontSize:13,color:doneExos===totalExos?C.green:C.terra,fontWeight:700}}>{doneExos}/{totalExos}</span>
+                </div>
+                <div style={{background:C.sand,borderRadius:4,height:8,overflow:"hidden"}}>
+                  <div style={{width:(totalExos>0?doneExos/totalExos*100:0)+"%",background:doneExos===totalExos?C.green:C.terra,height:"100%",borderRadius:4,transition:"width 0.3s"}}/>
+                </div>
+              </div>
+            )}
+            {/* Seances ref */}
+            {ref.map(seance=>{
+              const doneSc=seance.exos.filter(e=>isChecked(animal,e.id)).length;
+              return (
+                <div key={seance.num} style={{...card,marginBottom:12}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                    <span style={{fontWeight:700,fontSize:14}}>{seance.label}</span>
+                    <span style={badge(doneSc===seance.exos.length?C.green:C.sand)}>{doneSc}/{seance.exos.length}</span>
+                  </div>
+                  {seance.exos.map((exo,i)=>{
+                    const checked=isChecked(animal,exo.id);
+                    return (
+                      <div key={exo.id} onClick={()=>onUpdate(toggleExo(animal,exo.id))} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 0",borderBottom:i<seance.exos.length-1?"1px solid "+C.sand:"none",cursor:"pointer"}}>
+                        <CB checked={checked} onToggle={()=>{}}/>
+                        <span style={{fontSize:14,color:checked?C.muted:C.text,textDecoration:checked?"line-through":"none"}}>{exo.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+            {/* Exercices perso */}
+            {(animal.extraExos||[]).length>0&&(
+              <div style={{...card,marginBottom:12}}>
+                <div style={{fontWeight:700,fontSize:14,marginBottom:8}}>Exercices personnalises</div>
+                {(animal.extraExos||[]).map((exo,i)=>{
+                  const checked=isChecked(animal,exo.id);
+                  return (
+                    <div key={exo.id} onClick={()=>onUpdate(toggleExo(animal,exo.id))} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 0",borderBottom:i<(animal.extraExos||[]).length-1?"1px solid "+C.sand:"none",cursor:"pointer"}}>
+                      <CB checked={checked} onToggle={()=>{}}/>
+                      <span style={{fontSize:14,color:checked?C.muted:C.text,textDecoration:checked?"line-through":"none"}}>{exo.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <div style={card}>
+              <div style={{fontWeight:600,fontSize:13,marginBottom:8}}>+ Exercice personnalise</div>
+              <div style={{display:"flex",gap:8}}>
+                <input style={{...inputSt,flex:1}} placeholder="Ex : Travailler l'assis..." value={newExo} onChange={e=>setNewExo(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addExo()}/>
+                <button style={{...btn(),padding:"9px 14px",flexShrink:0}} onClick={addExo}>+</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab==="rdv"&&(
+          <div>
+            <div style={secTitle}><span>📅</span> Prochains rendez-vous</div>
+            {upRdvs.length===0?<p style={{color:C.muted,fontSize:13,marginBottom:12}}>Aucun RDV a venir</p>:upRdvs.map(r=>(
+              <div key={r.id} style={{...card,display:"flex",alignItems:"center",gap:10}}>
+                <div style={{flex:1}}>
+                  <div style={{fontWeight:600}}>{r.motif||"RDV"}</div>
+                  <div style={{fontSize:12,color:C.muted}}>{new Date(r.date).toLocaleDateString("fr-FR",{weekday:"long",day:"2-digit",month:"long"})}</div>
+                </div>
+                <button onClick={()=>delRdv(r.id)} style={{...btn("danger"),padding:"4px 10px",fontSize:12}}>×</button>
+              </div>
+            ))}
+            <div style={{...card,marginTop:4}}>
+              <div style={{fontWeight:600,marginBottom:10,fontSize:13}}>Ajouter un RDV</div>
+              <input type="date" style={{...inputSt,marginBottom:8}} value={newRdv.date} onChange={e=>setNewRdv(p=>({...p,date:e.target.value}))}/>
+              <input style={{...inputSt,marginBottom:8}} placeholder="Motif" value={newRdv.motif} onChange={e=>setNewRdv(p=>({...p,motif:e.target.value}))}/>
+              <button style={btn()} onClick={addRdv}>Ajouter</button>
+            </div>
+            {pastRdvs.length>0&&<>
+              <div style={{...secTitle,marginTop:16}}><span>📆</span> Passes</div>
+              {pastRdvs.map(r=>(
+                <div key={r.id} style={{...card,opacity:.55,display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>{r.motif||"RDV"}</div><div style={{fontSize:12,color:C.muted}}>{new Date(r.date).toLocaleDateString("fr-FR")}</div></div>
+                  <button onClick={()=>delRdv(r.id)} style={{...btn("danger"),padding:"4px 10px",fontSize:12}}>×</button>
+                </div>
+              ))}
+            </>}
+          </div>
+        )}
+
+        {tab==="notes"&&(
+          <div>
+            <div style={secTitle}><span>📝</span> Notes de seances</div>
+            {(animal.seances||[]).length===0?<p style={{color:C.muted,fontSize:13,marginBottom:12}}>Aucune note enregistree</p>
+              :[...(animal.seances||[])].sort((a,b)=>b.date.localeCompare(a.date)).map(s=>(
+                <div key={s.id} style={card}>
+                  <div style={{fontSize:12,color:C.muted,marginBottom:4}}>{new Date(s.date).toLocaleDateString("fr-FR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"})}</div>
+                  <div style={{fontSize:14,whiteSpace:"pre-wrap"}}>{s.note}</div>
+                </div>
+              ))
+            }
+            <div style={{...card,marginTop:4}}>
+              <div style={{fontWeight:600,marginBottom:10,fontSize:13}}>Ajouter une note</div>
+              <input type="date" style={{...inputSt,marginBottom:8}} value={newNote.date} onChange={e=>setNewNote(p=>({...p,date:e.target.value}))}/>
+              <textarea style={{...inputSt,marginBottom:8,resize:"vertical",minHeight:80,fontFamily:"inherit"}} placeholder="Notes de la seance..." value={newNote.note} onChange={e=>setNewNote(p=>({...p,note:e.target.value}))}/>
+              <button style={btn()} onClick={addNote}>Ajouter</button>
+            </div>
+          </div>
+        )}
+
+        {tab==="infos"&&(
+          <div>
+            <div style={card}>
+              {[["Proprietaire",animal.proprietaire],["Telephone",animal.tel||"—"],["Race",animal.race],["Age",animal.age],["Motif",animal.motif||"Pack "+(animal.pack||"")]].map(([k,v])=>(
+                <div key={k} style={{display:"flex",gap:8,marginBottom:8}}>
+                  <span style={{fontSize:12,color:C.muted,minWidth:95}}>{k}</span>
+                  <span style={{fontSize:13,fontWeight:500}}>{v}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{...secTitle,marginTop:4}}><span>💬</span> Notes generales</div>
+            <textarea style={{...inputSt,resize:"vertical",minHeight:100,fontFamily:"inherit"}} value={editNotes} onChange={e=>{setEditNotes(e.target.value);onUpdate({...animal,notes:e.target.value});}} placeholder="Notes generales..."/>
+            {onDelete&&<button onClick={()=>onDelete(animal)} style={{...btn("danger"),width:"100%",padding:"11px",marginTop:16,fontSize:14}}>🗑 Supprimer ce patient</button>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Dashboard
+function Dashboard({data,weekNotes,setWeekNotes,onSelect,children}){
+  const today=new Date().toISOString().slice(0,10);
+  const todayStr=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+  const all=[...(data.chiots||[]),...(data.adultes||[])];
+  const rdvsToday=all.flatMap(a=>(a.rdvs||[]).filter(r=>r.date===today).map(r=>({...r,animal:a})));
+  const rdvsNext=all.flatMap(a=>(a.rdvs||[]).filter(r=>r.date>today).map(r=>({...r,animal:a}))).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,6);
+  return (
+    <div style={{padding:"16px 16px 80px"}}>
+      <div style={{...card,background:C.green,color:C.white,marginBottom:16}}>
+        <div style={{fontSize:11,opacity:.8,textTransform:"uppercase",letterSpacing:1}}>Aujourd'hui</div>
+        <div style={{fontWeight:700,fontSize:16,textTransform:"capitalize",marginTop:2}}>{todayStr}</div>
+        {rdvsToday.length>0?rdvsToday.map(r=>(
+          <div key={r.id} style={{background:"rgba(255,255,255,0.15)",borderRadius:8,padding:"7px 10px",marginTop:8,fontSize:13,cursor:"pointer",display:"flex",gap:8}} onClick={()=>onSelect(r.animal)}>
+            🐾 <span><b>{r.animal.nom}</b> — {r.motif}</span>
+          </div>
+        )):<div style={{marginTop:8,fontSize:13,opacity:.7}}>Aucun RDV aujourd'hui</div>}
+      </div>
+      {rdvsNext.length>0&&(
+        <div style={{marginBottom:20}}>
+          <div style={secTitle}><span>📅</span> Prochains rendez-vous</div>
+          {rdvsNext.map(r=>(
+            <div key={r.id} style={{...card,cursor:"pointer",display:"flex",gap:10,alignItems:"center"}} onClick={()=>onSelect(r.animal)}>
+              <div style={{fontWeight:700,color:C.terra,fontSize:13,minWidth:52}}>{new Date(r.date).toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})}</div>
+              <div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{r.animal.nom}</div><div style={{fontSize:12,color:C.muted}}>{r.motif}</div></div>
+            </div>
+          ))}
+        </div>
+      )}
+      <NotesHebdo weekNotes={weekNotes} setWeekNotes={setWeekNotes}/>
+      <div style={{marginBottom:16}}>
+        <div style={secTitle}><span>📊</span> Patients actifs</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          {[["Chiots",(data.chiots||[]).length,"🐾"],["Adultes",(data.adultes||[]).length,"🐕"]].map(([l,n,e])=>(
+            <div key={l} style={{...card,textAlign:"center"}}>
+              <div style={{fontSize:22}}>{e}</div>
+              <div style={{fontWeight:700,fontSize:24,color:C.green}}>{n}</div>
+              <div style={{fontSize:12,color:C.muted}}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// Formulaire nouveau patient
+function NouveauPatient({type,onAdd,onClose}){
+  const isChiot=type==="chiots";
+  const [form,setForm]=useState({nom:"",race:"",age:"",proprietaire:"",tel:"",notes:"",pack:isChiot?"facile":"",motif:""});
+  const set=k=>e=>setForm(p=>({...p,[k]:e.target.value}));
+  const valid=form.nom.trim()&&form.race.trim()&&form.proprietaire.trim();
+  const submit=()=>{
+    if(!valid)return;
+    const animal={...form,id:uid(),seancesCheck:[],seances:[],rdvs:[],extraExos:[]};
+    if(!isChiot)delete animal.pack;
+    else delete animal.motif;
+    onAdd(animal);
+    onClose();
+  };
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+      <div style={{background:C.white,borderRadius:"16px 16px 0 0",padding:"20px 16px 40px",width:"100%",maxWidth:480,maxHeight:"90vh",overflowY:"auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+          <div style={{fontWeight:700,fontSize:16}}>{isChiot?"🐾 Nouveau chiot":"🐕 Nouveau chien adulte"}</div>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:C.muted}}>×</button>
+        </div>
+        {[["nom","Nom *"],["race","Race *"],["age","Age"],["proprietaire","Proprietaire *"],["tel","Telephone"]].map(([k,l])=>(
+          <div key={k} style={{marginBottom:10}}>
+            <div style={{fontSize:12,color:C.muted,marginBottom:4}}>{l}</div>
+            <input style={inputSt} value={form[k]} onChange={set(k)} placeholder={l.replace(" *","")}/>
+          </div>
+        ))}
+        {isChiot&&(
+          <div style={{marginBottom:10}}>
+            <div style={{fontSize:12,color:C.muted,marginBottom:4}}>Pack</div>
+            <select style={inputSt} value={form.pack} onChange={set("pack")}>
+              <option value="facile">Facile</option>
+              <option value="complexe">Complexe</option>
+            </select>
+          </div>
+        )}
+        {!isChiot&&(
+          <div style={{marginBottom:10}}>
+            <div style={{fontSize:12,color:C.muted,marginBottom:4}}>Motif</div>
+            <input style={inputSt} value={form.motif} onChange={set("motif")} placeholder="Ex : Hypervigilence, stress..."/>
+          </div>
+        )}
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:12,color:C.muted,marginBottom:4}}>Notes</div>
+          <textarea style={{...inputSt,resize:"vertical",minHeight:70,fontFamily:"inherit"}} value={form.notes} onChange={set("notes")} placeholder="Observations generales..."/>
+        </div>
+        <button onClick={submit} style={{...btn(),width:"100%",padding:"12px",fontSize:15,opacity:valid?1:0.5}}>
+          Ajouter le patient
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// App principale
+function App(){
+  const [tab,setTab]=useState("dashboard");
+  const [selected,setSelected]=useState(null);
+  const [showForm,setShowForm]=useState(null); // "chiots" ou "adultes"
+  const [data,setData]=useState(()=>{try{const s=localStorage.getItem("mt_data");return s?JSON.parse(s):INIT;}catch{return INIT;}});
+  const [weekNotes,setWNRaw]=useState(()=>{try{const s=localStorage.getItem("mt_weeknotes");return s?JSON.parse(s):{};}catch{return {};}});
+  useEffect(()=>{try{localStorage.setItem("mt_data",JSON.stringify(data));}catch{}},[data]);
+  const setWeekNotes=v=>{setWNRaw(v);try{localStorage.setItem("mt_weeknotes",JSON.stringify(v));}catch{}};
+  const handleImport=(d,w)=>{setData(d);try{localStorage.setItem("mt_data",JSON.stringify(d));}catch{}setWeekNotes(w);};
+  const updateAnimal=u=>{
+    const k=u.pack!==undefined?"chiots":"adultes";
+    setData(p=>({...p,[k]:p[k].map(a=>a.id===u.id?u:a)}));
+    setSelected(u);
+  };
+  const deleteAnimal=u=>{
+    const k=u.pack!==undefined?"chiots":"adultes";
+    if(!window.confirm("Supprimer "+u.nom+" ?"))return;
+    setData(p=>({...p,[k]:p[k].filter(a=>a.id!==u.id)}));
+    setSelected(null);
+  };
+  const addAnimal=type=>animal=>{
+    setData(p=>({...p,[type]:[...p[type],animal]}));
+    setTab(type);
+  };
+
+  if(selected) return (
+    <div style={{background:C.cream,minHeight:"100vh",maxWidth:480,margin:"0 auto"}}>
+      <AnimalDetail animal={selected} onBack={()=>setSelected(null)} onUpdate={updateAnimal} onDelete={deleteAnimal}/>
+    </div>
+  );
+  return (
+    <div style={{background:C.cream,minHeight:"100vh",maxWidth:480,margin:"0 auto"}}>
+      {showForm&&<NouveauPatient type={showForm} onAdd={addAnimal(showForm)} onClose={()=>setShowForm(null)}/>}
+      <div style={{background:C.green,color:C.white,padding:"16px 20px 12px",position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 8px rgba(0,0,0,0.15)"}}>
+        <div style={{fontSize:18,fontWeight:700}}>🐾 Medical Training</div>
+        <div style={{fontSize:12,opacity:.8,marginTop:2}}>Clinique Arcadia · Ancenis</div>
+      </div>
+      <div style={{display:"flex",background:C.white,borderBottom:"2px solid "+C.sand,position:"sticky",top:64,zIndex:99}}>
+        {[["dashboard","🏠 Accueil"],["chiots","🐾 Chiots"],["adultes","🐕 Adultes"]].map(([k,l])=>(
+          <button key={k} style={tabBtn(tab===k)} onClick={()=>setTab(k)}>{l}</button>
+        ))}
+      </div>
+      {tab==="dashboard"&&(
+        <Dashboard data={data} weekNotes={weekNotes} setWeekNotes={setWeekNotes} onSelect={setSelected}>
+          <ExportImport data={data} weekNotes={weekNotes} onImport={handleImport}/>
+        </Dashboard>
+      )}
+      {(tab==="chiots"||tab==="adultes")&&(
+        <div style={{padding:"16px 16px 80px"}}>
+          {(tab==="chiots"?data.chiots:data.adultes).map(a=>(
+            <AnimalCard key={a.id} animal={a} onClick={()=>setSelected(a)}/>
+          ))}
+          <button onClick={()=>setShowForm(tab)} style={{...btn(),width:"100%",padding:"12px",fontSize:14,marginTop:4,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+            + Ajouter un {tab==="chiots"?"chiot":"chien adulte"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
