@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="Med Training"/>
 <meta name="theme-color" content="#5C7A5A"/>
-<title>Medical Training 🐾</title>
+<title>Medical Training </title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -223,7 +223,9 @@ function NotesHebdo({weekNotes,setWeekNotes}){
   const addTask=()=>{if(!newTask.trim())return;save({tasks:[...current.tasks,{id:uid(),label:newTask.trim(),done:false}]});setNewTask("");};
   const toggle=id=>save({tasks:current.tasks.map(t=>t.id===id?{...t,done:!t.done}:t)});
   const del=id=>save({tasks:current.tasks.filter(t=>t.id!==id)});
-  const weeks=[];for(let i=0;i<=4;i++){const d=new Date();d.setDate(d.getDate()-i*7);const k=getWeekKey(d);if(!weeks.includes(k))weeks.push(k);}
+  const weeks=[];
+  for(let i=4;i>=1;i--){const d=new Date();d.setDate(d.getDate()+i*7);const k=getWeekKey(d);if(!weeks.includes(k))weeks.push(k);}
+  for(let i=0;i<=4;i++){const d=new Date();d.setDate(d.getDate()-i*7);const k=getWeekKey(d);if(!weeks.includes(k))weeks.push(k);}
   const done=current.tasks.filter(t=>t.done).length;
   const total=current.tasks.length;
   return (
@@ -233,11 +235,12 @@ function NotesHebdo({weekNotes,setWeekNotes}){
         <div style={{marginLeft:"auto",display:"flex",gap:6,alignItems:"center"}}>
           {total>0&&<span style={badge(done===total?C.green:C.terra)}>{done}/{total}</span>}
           {sel===todayKey&&<span style={{background:C.yellow,color:C.text,borderRadius:20,padding:"2px 8px",fontSize:10,fontWeight:700}}>Cette semaine</span>}
+          {sel>todayKey&&<span style={{background:C.blue,color:C.white,borderRadius:20,padding:"2px 8px",fontSize:10,fontWeight:700}}>A venir</span>}
         </div>
       </div>
       <div style={card}>
         <select value={sel} onChange={e=>setSel(e.target.value)} style={{...inputSt,marginBottom:12,cursor:"pointer"}}>
-          {weeks.map(k=><option key={k} value={k}>{getWeekLabel(k)}{k===todayKey?" ✦":""}</option>)}
+          {weeks.map(k=><option key={k} value={k}>{k>todayKey?"→ ":k===todayKey?"✦ ":"← "}{getWeekLabel(k)}</option>)}
         </select>
         {total>0&&<div style={{background:C.sand,borderRadius:4,height:6,overflow:"hidden",marginBottom:12}}><div style={{width:(done/total*100)+"%",background:done===total?C.green:C.terra,height:"100%",borderRadius:4,transition:"width 0.3s"}}/></div>}
         {current.tasks.length===0
@@ -308,7 +311,7 @@ function AnimalCard({animal,onClick}){
 }
 
 // Detail animal
-function AnimalDetail({animal,onBack,onUpdate}){
+function AnimalDetail({animal,onBack,onUpdate,onDelete}){
   const [tab,setTab]=useState("exercices");
   const [newRdv,setNewRdv]=useState({date:"",motif:""});
   const [newNote,setNewNote]=useState({date:new Date().toISOString().slice(0,10),note:""});
@@ -481,6 +484,7 @@ function AnimalDetail({animal,onBack,onUpdate}){
             </div>
             <div style={{...secTitle,marginTop:4}}><span>💬</span> Notes generales</div>
             <textarea style={{...inputSt,resize:"vertical",minHeight:100,fontFamily:"inherit"}} value={editNotes} onChange={e=>{setEditNotes(e.target.value);onUpdate({...animal,notes:e.target.value});}} placeholder="Notes generales..."/>
+            {onDelete&&<button onClick={()=>onDelete(animal)} style={{...btn("danger"),width:"100%",padding:"11px",marginTop:16,fontSize:14}}>🗑 Supprimer ce patient</button>}
           </div>
         )}
       </div>
@@ -535,10 +539,65 @@ function Dashboard({data,weekNotes,setWeekNotes,onSelect,children}){
   );
 }
 
+// Formulaire nouveau patient
+function NouveauPatient({type,onAdd,onClose}){
+  const isChiot=type==="chiots";
+  const [form,setForm]=useState({nom:"",race:"",age:"",proprietaire:"",tel:"",notes:"",pack:isChiot?"facile":"",motif:""});
+  const set=k=>e=>setForm(p=>({...p,[k]:e.target.value}));
+  const valid=form.nom.trim()&&form.race.trim()&&form.proprietaire.trim();
+  const submit=()=>{
+    if(!valid)return;
+    const animal={...form,id:uid(),seancesCheck:[],seances:[],rdvs:[],extraExos:[]};
+    if(!isChiot)delete animal.pack;
+    else delete animal.motif;
+    onAdd(animal);
+    onClose();
+  };
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+      <div style={{background:C.white,borderRadius:"16px 16px 0 0",padding:"20px 16px 40px",width:"100%",maxWidth:480,maxHeight:"90vh",overflowY:"auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+          <div style={{fontWeight:700,fontSize:16}}>{isChiot?"🐾 Nouveau chiot":"🐕 Nouveau chien adulte"}</div>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:C.muted}}>×</button>
+        </div>
+        {[["nom","Nom *"],["race","Race *"],["age","Age"],["proprietaire","Proprietaire *"],["tel","Telephone"]].map(([k,l])=>(
+          <div key={k} style={{marginBottom:10}}>
+            <div style={{fontSize:12,color:C.muted,marginBottom:4}}>{l}</div>
+            <input style={inputSt} value={form[k]} onChange={set(k)} placeholder={l.replace(" *","")}/>
+          </div>
+        ))}
+        {isChiot&&(
+          <div style={{marginBottom:10}}>
+            <div style={{fontSize:12,color:C.muted,marginBottom:4}}>Pack</div>
+            <select style={inputSt} value={form.pack} onChange={set("pack")}>
+              <option value="facile">Facile</option>
+              <option value="complexe">Complexe</option>
+            </select>
+          </div>
+        )}
+        {!isChiot&&(
+          <div style={{marginBottom:10}}>
+            <div style={{fontSize:12,color:C.muted,marginBottom:4}}>Motif</div>
+            <input style={inputSt} value={form.motif} onChange={set("motif")} placeholder="Ex : Hypervigilence, stress..."/>
+          </div>
+        )}
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:12,color:C.muted,marginBottom:4}}>Notes</div>
+          <textarea style={{...inputSt,resize:"vertical",minHeight:70,fontFamily:"inherit"}} value={form.notes} onChange={set("notes")} placeholder="Observations generales..."/>
+        </div>
+        <button onClick={submit} style={{...btn(),width:"100%",padding:"12px",fontSize:15,opacity:valid?1:0.5}}>
+          Ajouter le patient
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // App principale
 function App(){
   const [tab,setTab]=useState("dashboard");
   const [selected,setSelected]=useState(null);
+  const [showForm,setShowForm]=useState(null); // "chiots" ou "adultes"
   const [data,setData]=useState(()=>{try{const s=localStorage.getItem("mt_data");return s?JSON.parse(s):INIT;}catch{return INIT;}});
   const [weekNotes,setWNRaw]=useState(()=>{try{const s=localStorage.getItem("mt_weeknotes");return s?JSON.parse(s):{};}catch{return {};}});
   useEffect(()=>{try{localStorage.setItem("mt_data",JSON.stringify(data));}catch{}},[data]);
@@ -549,13 +608,25 @@ function App(){
     setData(p=>({...p,[k]:p[k].map(a=>a.id===u.id?u:a)}));
     setSelected(u);
   };
+  const deleteAnimal=u=>{
+    const k=u.pack!==undefined?"chiots":"adultes";
+    if(!window.confirm("Supprimer "+u.nom+" ?"))return;
+    setData(p=>({...p,[k]:p[k].filter(a=>a.id!==u.id)}));
+    setSelected(null);
+  };
+  const addAnimal=type=>animal=>{
+    setData(p=>({...p,[type]:[...p[type],animal]}));
+    setTab(type);
+  };
+
   if(selected) return (
     <div style={{background:C.cream,minHeight:"100vh",maxWidth:480,margin:"0 auto"}}>
-      <AnimalDetail animal={selected} onBack={()=>setSelected(null)} onUpdate={updateAnimal}/>
+      <AnimalDetail animal={selected} onBack={()=>setSelected(null)} onUpdate={updateAnimal} onDelete={deleteAnimal}/>
     </div>
   );
   return (
     <div style={{background:C.cream,minHeight:"100vh",maxWidth:480,margin:"0 auto"}}>
+      {showForm&&<NouveauPatient type={showForm} onAdd={addAnimal(showForm)} onClose={()=>setShowForm(null)}/>}
       <div style={{background:C.green,color:C.white,padding:"16px 20px 12px",position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 8px rgba(0,0,0,0.15)"}}>
         <div style={{fontSize:18,fontWeight:700}}>🐾 Medical Training</div>
         <div style={{fontSize:12,opacity:.8,marginTop:2}}>Clinique Arcadia · Ancenis</div>
@@ -575,6 +646,9 @@ function App(){
           {(tab==="chiots"?data.chiots:data.adultes).map(a=>(
             <AnimalCard key={a.id} animal={a} onClick={()=>setSelected(a)}/>
           ))}
+          <button onClick={()=>setShowForm(tab)} style={{...btn(),width:"100%",padding:"12px",fontSize:14,marginTop:4,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+            + Ajouter un {tab==="chiots"?"chiot":"chien adulte"}
+          </button>
         </div>
       )}
     </div>
